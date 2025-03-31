@@ -1,4 +1,4 @@
-const { GoogleGenAI } = require("@google/genai");
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const config = require("../config/config");
 const NexusEvent = require("../models/NexusEvent");
 const Variant = require("../models/Variant");
