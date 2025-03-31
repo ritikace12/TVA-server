@@ -5,6 +5,9 @@ const cors = require("cors");
 const path = require("path");
 const config = require("./config/config");
 const AIService = require("./services/aiService");
+const variantRoutes = require('./routes/variantRoutes');
+const nexusEventRoutes = require('./routes/nexusEventRoutes');
+const chatRoutes = require('./routes/chatRoutes');
 
 const app = express();
 app.use(express.json());
@@ -24,7 +27,7 @@ app.get("/", (req, res) => {
 
 // MongoDB connection
 mongoose.connect(config.mongoUri)
-  .then(() => console.log("MongoDB Connected"))
+  .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
 // Chat endpoint
@@ -58,9 +61,10 @@ app.get("/api/health", (req, res) => {
 });
 
 // Routes
-app.use("/api/variants", require("./routes/variantRoutes"));
-app.use("/api/nexus-events", require("./routes/nexusEventRoutes"));
- 
+app.use('/api/variants', variantRoutes);
+app.use('/api/nexus-events', nexusEventRoutes);
+app.use('/api', chatRoutes);
+
 // Production static files
 if(process.env.NODE_ENV === "production"){
   app.use(express.static(path.join(__dirname, "../frontend/dist")))
@@ -71,33 +75,31 @@ if(process.env.NODE_ENV === "production"){
 }
 
 // Start server
-const PORT = process.env.PORT || 5001;
+const PORT = config.port;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log("Environment:", process.env.NODE_ENV || "development");
+  console.log(`Server is running on port ${PORT}`);
 });
 
 // Graceful shutdown
-const gracefulShutdown = async () => {
-  console.log("\nShutting down gracefully...");
-  try {
-    await mongoose.connection.close();
-    console.log("MongoDB connection closed");
-    process.exit(0);
-  } catch (error) {
-    console.error("Error during shutdown:", error);
-    process.exit(1);
-  }
-};
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received. Closing HTTP server and MongoDB connection...');
+  await mongoose.connection.close();
+  process.exit(0);
+});
 
-process.on("SIGTERM", gracefulShutdown);
-process.on("SIGINT", gracefulShutdown);
+process.on("SIGINT", async () => {
+  console.log("\nSIGINT received. Closing HTTP server and MongoDB connection...");
+  await mongoose.connection.close();
+  process.exit(0);
+});
+
 process.on("uncaughtException", (error) => {
   console.error("Uncaught Exception:", error);
-  gracefulShutdown();
+  process.exit(1);
 });
+
 process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection at:", promise, "reason:", reason);
-  gracefulShutdown();
+  process.exit(1);
 });
  
