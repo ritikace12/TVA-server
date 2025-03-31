@@ -4,20 +4,22 @@ require('dotenv').config();
 console.log('Environment variables:', {
   NODE_ENV: process.env.NODE_ENV,
   MONGODB_URI: process.env.MONGODB_URI ? 'Set' : 'Not set',
+  MONGO_URI: process.env.MONGO_URI ? 'Set' : 'Not set',
   PORT: process.env.PORT,
   PWD: process.env.PWD
 });
 
 // Validate required environment variables
-if (!process.env.MONGODB_URI) {
-  console.error('Error: MONGODB_URI environment variable is not set');
+const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
+if (!mongoUri) {
+  console.error('Error: Neither MONGODB_URI nor MONGO_URI environment variable is set');
   console.error('Current working directory:', process.cwd());
   console.error('Environment:', process.env);
   process.exit(1);
 }
 
 const config = {
-  mongoUri: process.env.MONGODB_URI,
+  mongoUri: mongoUri,
   port: process.env.PORT || 5001,
   nodeEnv: process.env.NODE_ENV || 'development',
   googleApiKey: process.env.GOOGLE_API_KEY,
