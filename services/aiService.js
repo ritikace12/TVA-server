@@ -4,7 +4,10 @@ const NexusEvent = require("../models/NexusEvent");
 const Variant = require("../models/Variant");
 
 // Initialize Google AI
-const ai = new GoogleGenAI({ apiKey: config.googleApiKey });
+const genAI = new GoogleGenerativeAI(config.googleApiKey);
+
+// Initialize the model
+const model = genAI.getGenerativeModel({ model: config.aiConfig.model });
 
 // System prompt for Miss Minutes
 const systemPrompt = `You are Miss Minutes, the Time Variance Authority's AI assistant. You have the following characteristics:
@@ -91,43 +94,26 @@ class AIService {
 
   static async generateResponse(message, history) {
     try {
-      // Format conversation history
-      const formattedHistory = history.map(msg => ({
-        role: msg.role,
-        content: msg.content
-      }));
-
-      // Check if the message requires database information
-      const dbQueryInfo = await this.determineDatabaseQuery(message);
-      let dbData = null;
-      
-      if (dbQueryInfo.shouldQuery) {
-        dbData = await this.queryDatabase(dbQueryInfo.queryType, dbQueryInfo.params);
-      }
-
-      // Combine system prompt, history, and current message
-      let fullPrompt = `${systemPrompt}\n\nConversation History:\n${formattedHistory.map(msg => `${msg.role}: ${msg.content}`).join('\n')}\n\nUser: ${message}`;
-
-      // Add database information if available
-      if (dbData) {
-        fullPrompt += `\n\nRelevant Database Information:\n${JSON.stringify(dbData, null, 2)}`;
-      }
-
-      console.log('Sending request to Gemini AI...');
-      
-      // Generate response using Gemini 2.0 Flash
-      const response = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
-        contents: fullPrompt,
+      // Prepare the chat history
+      const chat = model.startChat({
+        history: history.map(msg => ({
+          role: msg.role,
+          parts: msg.content,
+        })),
+        generationConfig: {
+          temperature: config.aiConfig.temperature,
+          topK: config.aiConfig.topK,
+          topP: config.aiConfig.topP,
+          maxOutputTokens: config.aiConfig.maxOutputTokens,
+        },
       });
 
-      console.log('Received response from Gemini AI');
-
-      // Add random prefix
-      const randomPrefix = responsePrefixes[Math.floor(Math.random() * responsePrefixes.length)];
-      return `${randomPrefix}\n\n${response.text}`;
+      // Send message and get response
+      const result = await chat.sendMessage(message);
+      const response = await result.response;
+      return response.text();
     } catch (error) {
-      console.error('AI Service error:', error);
+      console.error('AI Service Error:', error);
       throw error;
     }
   }
