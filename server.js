@@ -2,7 +2,6 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const path = require("path");
 const config = require("./config/config");
 const AIService = require("./services/aiService");
 const variantRoutes = require('./routes/variantRoutes');
@@ -69,15 +68,6 @@ app.get("/api/health", (req, res) => {
 app.use('/api/variants', variantRoutes);
 app.use('/api/nexus-events', nexusEventRoutes);
 app.use('/api', chatRoutes);
-
-// Production static files
-if(process.env.NODE_ENV === "production"){
-  app.use(express.static(path.join(__dirname, "../frontend/dist")))
-
-  app.get("*", (req, res)=>{
-    res.sendFile(path.join(__dirname,"../frontend", "dist", "index.html"))
-  })
-}
 
 // Start server
 const PORT = config.port;

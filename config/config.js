@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 const config = {
-  mongoUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/tva',
+  mongoUri: process.env.MONGODB_URI,
   port: process.env.PORT || 5001,
   nodeEnv: process.env.NODE_ENV || 'development',
   googleApiKey: process.env.GOOGLE_API_KEY,
