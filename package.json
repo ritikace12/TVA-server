@@ -1,7 +1,7 @@
 {
   "name": "tva-backend",
   "version": "1.0.0",
-  "description": "Backend for TVA website with Miss Minutes chatbot",
+  "description": "Backend for TVA application",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

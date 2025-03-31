@@ -1,8 +1,9 @@
 require('dotenv').config();
 
-module.exports = {
+const config = {
+  mongoUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/tva',
   port: process.env.PORT || 5001,
-  mongoUri: process.env.MONGO_URI,
+  nodeEnv: process.env.NODE_ENV || 'development',
   googleApiKey: process.env.GOOGLE_API_KEY,
   corsOrigins: [
     'http://localhost:5173',
@@ -21,4 +22,6 @@ module.exports = {
     topP: 0.95,
     maxOutputTokens: 1024,
   }
-}; 
+};
+
+module.exports = config; 
