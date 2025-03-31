@@ -21,7 +21,9 @@ const corsOptions = {
     'http://localhost:5178',
     'http://localhost:5179',
     'http://localhost:5180',
-    'https://tva-0.netlify.app',  // Add Netlify domain     // Add alternative Netlify domain
+    'https://tva-0.netlify.app',
+    'https://67ead73d-0c1a-4f1a-9c1a-0c1a4f1a9c1a--tva-0.netlify.app',
+    'https://*.netlify.app'  // Allow all Netlify subdomains
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
