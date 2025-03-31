@@ -14,7 +14,12 @@ app.use(express.json());
 
 // CORS configuration
 app.use(cors({
-  origin: ["http://localhost:5173", "http://localhost:3000"],
+  origin: [
+    "http://localhost:5173", 
+    "http://localhost:3000",
+    "https://tva-uxkc.onrender.com",
+    "https://tva-frontend.netlify.app"  // Add your Netlify domain here
+  ],
   methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"]
