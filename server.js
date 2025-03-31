@@ -18,7 +18,7 @@ app.use(cors({
     "http://localhost:5173", 
     "http://localhost:3000",
     "https://tva-uxkc.onrender.com",
-    "https://tva-1.netlify.app"  // Add your Netlify domain here
+    "https://tva-0.netlify.app"  // Add your Netlify domain here
   ],
   methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
   credentials: true,
