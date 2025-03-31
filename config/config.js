@@ -1,8 +1,18 @@
 require('dotenv').config();
 
+// Debug environment variables
+console.log('Environment variables:', {
+  NODE_ENV: process.env.NODE_ENV,
+  MONGODB_URI: process.env.MONGODB_URI ? 'Set' : 'Not set',
+  PORT: process.env.PORT,
+  PWD: process.env.PWD
+});
+
 // Validate required environment variables
 if (!process.env.MONGODB_URI) {
   console.error('Error: MONGODB_URI environment variable is not set');
+  console.error('Current working directory:', process.cwd());
+  console.error('Environment:', process.env);
   process.exit(1);
 }
 
