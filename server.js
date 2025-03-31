@@ -29,10 +29,29 @@ app.get("/", (req, res) => {
   res.send("Backend is live 🚀");
 });
 
-// MongoDB connection
-mongoose.connect(config.mongoUri)
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+// MongoDB connection with retry logic
+const connectDB = async () => {
+  try {
+    console.log('Attempting to connect to MongoDB...');
+    console.log('MongoDB URI:', config.mongoUri ? 'Set' : 'Not set');
+    
+    await mongoose.connect(config.mongoUri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log("Connected to MongoDB successfully");
+  } catch (err) {
+    console.error("MongoDB connection error:", err);
+    console.error("Connection details:", {
+      uri: config.mongoUri ? 'Set' : 'Not set',
+      env: process.env.NODE_ENV,
+      port: config.port
+    });
+    process.exit(1);
+  }
+};
+
+connectDB();
 
 // Chat endpoint
 app.post("/api/chat", async (req, res) => {

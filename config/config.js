@@ -1,5 +1,11 @@
 require('dotenv').config();
 
+// Validate required environment variables
+if (!process.env.MONGODB_URI) {
+  console.error('Error: MONGODB_URI environment variable is not set');
+  process.exit(1);
+}
+
 const config = {
   mongoUri: process.env.MONGODB_URI,
   port: process.env.PORT || 5001,
