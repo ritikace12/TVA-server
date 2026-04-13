@@ -98,15 +98,18 @@ Use database context when available.
           temperature: config.aiConfig.temperature || 0.7
         }
       });
-    } catch (err) {
-      console.log("⚠️ Falling back model...");
+    } catch (error) {
+  if (error.message.includes("429")) {
+    return res.json({
+      response: "⚠️ Jarvis is currently overloaded. Try again in a bit, Boss."
+    });
+  }
 
-      // 🔁 Fallback
-      aiResponse = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
-        contents: `${systemPrompt}\n\nConversation:\n${historyText}\n\nUser: ${message}\nMiss Minutes:`
-      });
-    }
+  res.status(500).json({
+    error: "AI failed",
+    details: error.message
+  });
+}
 
     const text = aiResponse.text || "No response from AI";
 
