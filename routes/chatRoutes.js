@@ -5,7 +5,7 @@ const config = require('../config/config');
 const Variant = require('../models/Variant');
 const NexusEvent = require('../models/NexusEvent');
 
-// 🔥 Init new SDK
+// 🔥 Init SDK
 const ai = new GoogleGenAI({
   apiKey: config.googleApiKey
 });
@@ -15,7 +15,7 @@ router.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
-// 🧠 DB Context Fetcher (unchanged)
+// 🧠 DB Context Fetcher
 async function getDatabaseContext(message) {
   const context = {
     variants: [],
@@ -23,16 +23,18 @@ async function getDatabaseContext(message) {
   };
 
   try {
-    if (message.toLowerCase().includes('variant')) {
+    const msg = message.toLowerCase();
+
+    if (msg.includes('variant')) {
       context.variants = await Variant.find({});
     }
 
-    if (message.toLowerCase().includes('nexus') || message.toLowerCase().includes('event')) {
+    if (msg.includes('nexus') || msg.includes('event')) {
       context.nexusEvents = await NexusEvent.find({});
     }
 
-    if (message.toLowerCase().includes('who is') || message.toLowerCase().includes('tell me about')) {
-      const searchTerm = message.toLowerCase().replace(/who is|tell me about/g, '').trim();
+    if (msg.includes('who is') || msg.includes('tell me about')) {
+      const searchTerm = msg.replace(/who is|tell me about/g, '').trim();
       context.variants = await Variant.find({
         $or: [
           { name: { $regex: searchTerm, $options: 'i' } },
@@ -48,7 +50,7 @@ async function getDatabaseContext(message) {
   }
 }
 
-// 🚀 Chat endpoint (UPDATED)
+// 🚀 Chat endpoint
 router.post('/chat', async (req, res) => {
   try {
     const { message, history = [] } = req.body;
@@ -56,7 +58,7 @@ router.post('/chat', async (req, res) => {
     // 🧠 Fetch DB context
     const context = await getDatabaseContext(message);
 
-    // 🔥 Build SYSTEM PROMPT (Miss Minutes personality)
+    // 🧠 System Prompt
     let systemPrompt = `
 You are Miss Minutes, the TVA guide.
 
@@ -82,7 +84,7 @@ Use database context when available.
       });
     }
 
-    // 🧠 Build conversation history manually
+    // 🧠 History formatting
     const historyText = history
       .map(msg => `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`)
       .join("\n");
@@ -90,35 +92,54 @@ Use database context when available.
     let aiResponse;
 
     try {
-      // 🔥 Primary model
+      // ✅ Stable model (FIXED)
       aiResponse = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-1.5-flash",
         contents: `${systemPrompt}\n\nConversation:\n${historyText}\n\nUser: ${message}\nMiss Minutes:`,
         config: {
-          temperature: config.aiConfig.temperature || 0.7
+          temperature: 0.7
         }
       });
+
     } catch (error) {
-  if (error.message.includes("429")) {
-    return res.json({
-      response: "⚠️ Jarvis is currently overloaded. Try again in a bit, Boss."
-    });
-  }
+      console.error("Primary AI error:", error.message);
 
-  res.status(500).json({
-    error: "AI failed",
-    details: error.message
-  });
-}
+      // 🔁 Handle rate limit gracefully
+      if (error.message.includes("429")) {
+        return res.json({
+          response: "⏳ Miss Minutes is busy pruning timelines right now. Try again in a moment!"
+        });
+      }
 
-    const text = aiResponse.text || "No response from AI";
+      // 🔁 Fallback attempt (retry once)
+      try {
+        aiResponse = await ai.models.generateContent({
+          model: "gemini-1.5-flash",
+          contents: `User: ${message}\nAssistant:`,
+        });
+      } catch (fallbackError) {
+        console.error("Fallback failed:", fallbackError.message);
+
+        return res.status(500).json({
+          error: "AI failed completely",
+          details: fallbackError.message
+        });
+      }
+    }
+
+    // 🧠 Safe text extraction
+    const text =
+      aiResponse?.text ||
+      aiResponse?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "⚠️ Miss Minutes is confused. Try again.";
 
     res.json({ response: text });
 
   } catch (error) {
     console.error("🔥 Chat error:", error);
+
     res.status(500).json({
-      error: "AI failed",
+      error: "Server error",
       details: error.message
     });
   }
